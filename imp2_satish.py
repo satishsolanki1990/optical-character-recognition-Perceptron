@@ -6,6 +6,7 @@ Created on Tue Oct 29 18:16:08 2019
 """
 
 
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -41,11 +42,13 @@ n_val = X_val.shape[0]
 
 ## gram matrix
 
-def gram(p):
+def gram(p,X):
+    
+    n = X.shape[0]
     K=np.empty([n,n])
     for i in range(n):
         for j in range(i,n):
-            K[i,j]=(1+X[j].dot(np.transpose(X[i]))**p
+            K[i,j]=(1+X[j].dot(np.transpose(X[i])))**p
             K[j,i]= K[i,j]
     return K
 
@@ -56,31 +59,39 @@ y = np.transpose(np.array(train.iloc[:,0],ndmin=2))
 y_val = np.transpose(np.array(val.iloc[:,0],ndmin=2))
 
 
-w = np.zeros(d)
+#w = np.zeros(d)
 iters = 15
 it = 0
 accuracy_train = []
-accuracy_val = []
-ws = []
+#accuracy_val = []
+#ws = []
 alpha=np.zeros(n)
+y_hat=[]
 
-
-for i in p:    
-    K=gram(p)
+for a in p:    
+    print("kernel",a)
+    K=gram(a,X)
     while it < iters:
         for i in range(n):
-            u=[alpha[j]*K[j][i]*y[j] for j in range(n)]
-            s=sum(u)
+            # u = prediction of y
+            u=sum([alpha[j]*K[j,i]*y[j] for j in range(n)])
+
+            if it==iters:
+                y_hat.append(np.sign(u))
+                
             if u*y[i] <= 0:
                 alpha[i]+=1
+            
         it += 1
+        print('iteration:',it)
         # Accuracies :
-        accuracy_train.append((np.sign(X.dot(alpha))*y[:,0]==1).sum()/n)
-        accuracy_val.append((np.sign(X_val.dot(alpha))*y_val[:,0]==1).sum()/n_val)
-        ws.append(alpha)
+
+        accuracy_train.append((y_hat[:]*y[:]==1).sum()/n)
+#        accuracy_val.append((np.sign(X_val.dot(alpha))*y_val[:,0]==1).sum()/n_val)
+#        ws.append(alpha)
         
-    part_3_curves = pd.DataFrame({'train':accuracy_train,'validation':accuracy_val})
-    part_3_curves.to_csv('part_3_curves'.join(str(i))+'.csv',index=False)# plot curves in report
+    part_3_curves = pd.DataFrame({'train':accuracy_train})#'validation':accuracy_val})
+    part_3_curves.to_csv('part_3_curves_'.join(str(a))+'_.csv',index=False)# plot curves in report
 
 # dff=pd.read_csv('part_3_curves.csv')
 
@@ -90,7 +101,7 @@ for i in p:
 
 #test[['id','predicted_price']].to_csv('prediction.csv',index=False)# .csv file sent
 
-    plt.figure(i)
+    plt.figure(a)
     plt.plot(accuracy_train)
-    plt.plot(accuracy_val)
+#    plt.plot(accuracy_val)
     
